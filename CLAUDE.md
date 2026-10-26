@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `create-next-app` 스캐폴드만 있다 (Next.js 16.4.2, React 19.3, TypeScript, Tailwind 4, App Router, `src/` 디렉터리, alias `@/*` → `src/*`). 앱 코드, DB, 테스트는 아직 없다. 무엇을 만들지는 [PRD.md](PRD.md)(한국어)가 기준이다: 데이터 모델, 화면, API 라우트, 환경변수, 미결정 사항(§13). 구현 전에 반드시 읽을 것.
 
+## UI 가이드
+
+화면·스타일(Tailwind 클래스, 레이아웃, 카드/카테고리 바 규칙)은 [ui.md](ui.md)를 따른다. UI를 만들거나 수정하기 전에 읽을 것.
+
 ## 명령어
 
 - `npm run dev` — 개발 서버 (http://localhost:3000)
