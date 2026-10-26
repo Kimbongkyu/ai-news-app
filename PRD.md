@@ -9,8 +9,8 @@
 - 선택한 뉴스를 클릭 한 번으로 Notion에 보관한다.
 
 ## 3. 사용자
-- 여러 명이 사용. 누구나 이메일/비밀번호로 회원가입 가능.
-- 역할: `admin`, `user`. 최초 가입자 또는 환경변수(`ADMIN_EMAIL`)로 지정한 이메일이 admin.
+- 여러 명이 사용. 누구나 회원가입 가능(인증은 Clerk 사용).
+- 역할: `admin`, `user`. 역할은 앱 DB의 `users.role`로 관리하며, 최초 가입자 또는 환경변수(`ADMIN_EMAIL`)로 지정한 이메일이 admin.
 
 ## 4. 뉴스 소스
 | 소스 | RSS |
@@ -21,8 +21,11 @@
 ## 5. 기능 요구사항
 
 ### 5.1 인증
-- 앱 실행 시 로그인 필수. 미로그인 접근은 `/login`으로 리다이렉트.
-- 이메일/비밀번호 회원가입·로그인. 비밀번호는 해시로 저장, 세션 쿠키 사용.
+- 앱 접속 시 로그인 필수. 미로그인 사용자에게는 콘텐츠 대신 로그인 모달(Clerk)을 자동으로 띄운다.
+- 인증은 외부 서비스 Clerk(`@clerk/nextjs`)에 위임한다(회원가입·로그인·세션 관리). 비밀번호는 앱이 저장하지 않는다.
+- 로그인·가입은 별도 페이지 없이 Clerk 모달(`openSignIn`)에서 처리한다. 루트 레이아웃이 `<Show when="signed-out">`로 로그인 게이트를, `signed-in`일 때만 페이지를 렌더링한다. 로그인 후 헤더에 `UserButton`(프로필·로그아웃)을 표시한다.
+- Next.js 16의 `src/proxy.ts`(Clerk 미들웨어)가 `/api/*`를 인증 필수로 보호한다.
+- 로그인한 사용자의 최초 요청 시 앱 DB `users`에 Clerk user ID로 행을 만들고(없을 때만), 이때 역할을 정한다(최초 사용자 또는 `ADMIN_EMAIL` 일치 시 admin). 권한 검사는 `users.role` 기준.
 
 ### 5.2 뉴스 가져오기
 - '뉴스 가져오기' 버튼 클릭 시 두 RSS 피드의 최신 글을 모두 읽는다.
@@ -50,13 +53,14 @@
 
 ## 6. 기술 스택
 - 프레임워크: Next.js (App Router, TypeScript), Node.js
+- 인증: Clerk (`@clerk/nextjs`)
 - DB: Neon(Postgres) + Drizzle ORM
 - AI: Claude API (번역·요약·카테고리 분류, 구조화 JSON 출력)
 - Notion: Notion MCP 서버
 - 배포: Vercel
 
 ## 7. 데이터 모델
-- `users`: id, email(unique), password_hash, role, created_at
+- `users`: id(Clerk user ID, text PK), email, role, created_at
 - `categories`: id, name(unique), created_at
 - `articles`: id, source, url(unique), original_title, title_ko, summary_ko, published_at, category_id(nullable = 미분류), created_at
 - `fetch_state`: last_fetched_at
@@ -64,15 +68,15 @@
 - `notion_saves`: user_id, article_id, notion_page_url
 
 ## 8. 화면
-- `/login`, `/signup`
+- 로그인/가입: 모달 (별도 경로 없음)
 - `/` : 카드 목록, 카테고리 필터, '뉴스 가져오기' 버튼
 - `/categories` : 카테고리 관리 (admin)
 
 ## 9. API (예정)
-`/api/auth/*`, `/api/news/fetch`, `/api/articles`, `/api/categories`, `/api/articles/[id]/notion`, `/api/notion/oauth/*`
+`/api/news/fetch`, `/api/articles`, `/api/categories`, `/api/articles/[id]/notion`, `/api/notion/oauth/*`
 
 ## 10. 환경변수
-`DATABASE_URL`, `ANTHROPIC_API_KEY`, `SESSION_SECRET`, `ADMIN_EMAIL`, 토큰 암호화 키
+`DATABASE_URL`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`(`pk_`), `CLERK_SECRET_KEY`(`sk_`), `ADMIN_EMAIL`, 토큰 암호화 키
 
 ## 11. 리스크 및 대응
 - **Claude 비용 노출**(공개 가입 + 누구나 수집): 10분 재실행 간격으로 1차 대응. 필요 시 배치·건수 제한 추가.
@@ -80,7 +84,7 @@
 - **Notion MCP OAuth 복잡도**(클라이언트 등록, 토큰 갱신): 구현 초기에 먼저 검증.
 
 ## 12. 검증 기준
-- 비로그인 접근 차단, 가입/로그인, admin/일반 권한 차이
+- 비로그인 접근 차단, Clerk 가입/로그인, 최초 요청 시 `users` 행 생성, admin/일반 권한 차이
 - 수집 실행 시 카드 생성, 10분 내 재실행은 Claude 미호출, 이후 재실행 시 중복 없음
 - 카테고리 필터, 카테고리 CRUD(admin만), 삭제 후 '미분류' 이동 및 재분류
 - Notion 연결 후 저장 시 지정 페이지 하위에 페이지 생성
