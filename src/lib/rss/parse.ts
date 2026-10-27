@@ -4,7 +4,25 @@ export type FeedItem = {
   title: string;
   url: string;
   publishedAt: Date | null;
+  // 태그를 제거한 본문 발췌. 없으면 빈 문자열.
+  excerpt: string;
 };
+
+const EXCERPT_MAX = 1500;
+
+function toExcerpt(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&quot;/g, '"')
+    .replace(/&#0?39;|&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, EXCERPT_MAX);
+}
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -68,6 +86,7 @@ export function parseFeed(xml: string): FeedItem[] {
       title,
       url: normalizeUrl(url),
       publishedAt: toDate(item.pubDate),
+      excerpt: toExcerpt(text(item["content:encoded"]) || text(item.description)),
     });
   }
 
@@ -82,6 +101,7 @@ export function parseFeed(xml: string): FeedItem[] {
       title,
       url: normalizeUrl(url),
       publishedAt: toDate(entry.published ?? entry.updated),
+      excerpt: toExcerpt(text(entry.content) || text(entry.summary)),
     });
   }
 

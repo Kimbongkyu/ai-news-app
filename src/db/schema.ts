@@ -36,6 +36,8 @@ export const articles = pgTable(
     source: text("source").notNull(),
     url: text("url").notNull().unique(),
     originalTitle: text("original_title").notNull(),
+    // RSS 본문 발췌. OpenAI 번역·요약 입력이자, 실패 시 재처리용.
+    excerpt: text("excerpt"),
     titleKo: text("title_ko"),
     summaryKo: text("summary_ko"),
     publishedAt: timestamp("published_at", { withTimezone: true }),

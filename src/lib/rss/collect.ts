@@ -8,7 +8,7 @@ const FETCH_TIMEOUT_MS = 10_000;
 
 export type CollectResult = {
   added: number;
-  // 이번에 새로 저장된 기사 id. 이후 Claude 분류 단계의 입력으로 쓴다.
+  // 이번에 새로 저장된 기사 id. 이후 OpenAI 번역·요약·분류 단계의 입력으로 쓴다.
   addedIds: number[];
   errors: string[];
 };
@@ -46,6 +46,7 @@ export async function collectNews(): Promise<CollectResult> {
         source,
         url: item.url,
         originalTitle: item.title,
+        excerpt: item.excerpt,
         publishedAt: item.publishedAt,
       });
     }
