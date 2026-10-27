@@ -1,16 +1,23 @@
-import { desc, eq, isNull, sql } from "drizzle-orm";
+import { count, desc, eq, isNull, sql } from "drizzle-orm";
 import { Suspense } from "react";
 import { CategoryBar } from "@/components/category-bar";
+import { FetchNewsButton } from "@/components/fetch-news-button";
 import { NewsCard } from "@/components/news-card";
+import { Pagination } from "@/components/pagination";
 import { db } from "@/db";
 import { articles, categories } from "@/db/schema";
 
 export const instant = false;
 
+const PAGE_SIZE = 9;
+
 export default function DashboardPage({ searchParams }: PageProps<"/dashboard">) {
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
-      <h1 className="text-xl font-semibold tracking-tight">AI 뉴스 수집기</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold tracking-tight">AI 뉴스 수집기</h1>
+        <FetchNewsButton />
+      </div>
       <Suspense fallback={<DashboardSkeleton />}>
         <Dashboard searchParams={searchParams} />
       </Suspense>
@@ -23,7 +30,7 @@ async function Dashboard({
 }: {
   searchParams: PageProps<"/dashboard">["searchParams"];
 }) {
-  const { category } = await searchParams;
+  const { category, page: pageParam } = await searchParams;
   const param = typeof category === "string" ? category : "all";
 
   const categoryList = await db
@@ -41,6 +48,29 @@ async function Dashboard({
       : selectedCategory
         ? eq(articles.categoryId, selectedCategory.id)
         : undefined;
+
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(articles)
+    .where(filter);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  // 잘못된 값이나 범위를 벗어난 페이지는 가장 가까운 유효 페이지로 맞춘다.
+  const requested = Number.parseInt(
+    typeof pageParam === "string" ? pageParam : "1",
+    10,
+  );
+  const page = Math.min(
+    Math.max(Number.isNaN(requested) ? 1 : requested, 1),
+    totalPages,
+  );
+
+  const hrefFor = (p: number) => {
+    const params = new URLSearchParams();
+    if (selected !== "all") params.set("category", selected);
+    if (p > 1) params.set("page", String(p));
+    const qs = params.toString();
+    return qs ? `/dashboard?${qs}` : "/dashboard";
+  };
 
   const rows = await db
     .select({
@@ -60,7 +90,9 @@ async function Dashboard({
     .orderBy(
       desc(sql`coalesce(${articles.publishedAt}, ${articles.createdAt})`),
       desc(articles.id),
-    );
+    )
+    .limit(PAGE_SIZE)
+    .offset((page - 1) * PAGE_SIZE);
 
   return (
     <>
@@ -82,6 +114,7 @@ async function Dashboard({
           ))}
         </div>
       )}
+      <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
     </>
   );
 }

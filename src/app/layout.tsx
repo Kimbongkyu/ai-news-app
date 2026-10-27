@@ -27,6 +27,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
+      // 브라우저 확장이 <html>에 속성을 주입해 생기는 hydration 경고를 무시한다.
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
