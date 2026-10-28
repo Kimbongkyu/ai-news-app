@@ -5,6 +5,8 @@ type CategoryBarProps = {
   categories: Pick<Category, "id" | "name">[];
   // "all" | "none"(미분류) | 카테고리 id
   selected: string;
+  // 현재 검색어. 카테고리를 바꿔도 유지한다.
+  query?: string;
 };
 
 const chip =
@@ -13,15 +15,23 @@ const idle =
   "border border-zinc-200 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-800";
 const active = "bg-indigo-600 text-white dark:bg-indigo-500";
 
-export function CategoryBar({ categories, selected }: CategoryBarProps) {
+export function CategoryBar({ categories, selected, query }: CategoryBarProps) {
+  const hrefFor = (category: string) => {
+    const params = new URLSearchParams();
+    if (category !== "all") params.set("category", category);
+    if (query) params.set("q", query);
+    const qs = params.toString();
+    return qs ? `/dashboard?${qs}` : "/dashboard";
+  };
+
   const items = [
-    { key: "all", label: "전체", href: "/dashboard" },
+    { key: "all", label: "전체", href: hrefFor("all") },
     ...categories.map((c) => ({
       key: String(c.id),
       label: c.name,
-      href: `/dashboard?category=${c.id}`,
+      href: hrefFor(String(c.id)),
     })),
-    { key: "none", label: "미분류", href: "/dashboard?category=none" },
+    { key: "none", label: "미분류", href: hrefFor("none") },
   ];
 
   return (

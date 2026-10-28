@@ -1,9 +1,10 @@
-import { count, desc, eq, isNull, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, isNull, or, sql } from "drizzle-orm";
 import { Suspense } from "react";
 import { CategoryBar } from "@/components/category-bar";
 import { FetchNewsButton } from "@/components/fetch-news-button";
 import { NewsCard } from "@/components/news-card";
 import { Pagination } from "@/components/pagination";
+import { SearchForm } from "@/components/search-form";
 import { db } from "@/db";
 import { articles, categories, notionSaves } from "@/db/schema";
 import { ensureUser } from "@/lib/users";
@@ -31,8 +32,9 @@ async function Dashboard({
 }: {
   searchParams: PageProps<"/dashboard">["searchParams"];
 }) {
-  const { category, page: pageParam } = await searchParams;
+  const { category, page: pageParam, q } = await searchParams;
   const param = typeof category === "string" ? category : "all";
+  const query = typeof q === "string" ? q.trim().slice(0, 100) : "";
 
   const categoryList = await db
     .select({ id: categories.id, name: categories.name })
@@ -43,12 +45,24 @@ async function Dashboard({
   const selectedCategory = categoryList.find((c) => String(c.id) === param);
   const selected = selectedCategory ? param : param === "none" ? "none" : "all";
 
-  const filter =
+  const categoryFilter =
     selected === "none"
       ? isNull(articles.categoryId)
       : selectedCategory
         ? eq(articles.categoryId, selectedCategory.id)
         : undefined;
+
+  // 한국어 제목·요약과 원문 제목에서 대소문자 구분 없이 찾는다. LIKE 특수문자는 이스케이프한다.
+  const pattern = `%${query.replace(/[\\%_]/g, "\\$&")}%`;
+  const searchFilter = query
+    ? or(
+        ilike(articles.titleKo, pattern),
+        ilike(articles.summaryKo, pattern),
+        ilike(articles.originalTitle, pattern),
+      )
+    : undefined;
+
+  const filter = and(categoryFilter, searchFilter);
 
   const [{ total }] = await db
     .select({ total: count() })
@@ -68,6 +82,7 @@ async function Dashboard({
   const hrefFor = (p: number) => {
     const params = new URLSearchParams();
     if (selected !== "all") params.set("category", selected);
+    if (query) params.set("q", query);
     if (p > 1) params.set("page", String(p));
     const qs = params.toString();
     return qs ? `/dashboard?${qs}` : "/dashboard";
@@ -107,12 +122,17 @@ async function Dashboard({
 
   return (
     <>
-      <CategoryBar categories={categoryList} selected={selected} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <CategoryBar categories={categoryList} selected={selected} query={query} />
+        <SearchForm query={query} category={selected} />
+      </div>
       {rows.length === 0 ? (
         <p className="py-16 text-center text-sm text-zinc-500">
-          {selected === "all"
-            ? "아직 뉴스가 없어요. '뉴스 가져오기'를 눌러 보세요."
-            : "이 카테고리에 해당하는 뉴스가 없어요."}
+          {query
+            ? `'${query}'에 해당하는 뉴스가 없어요.`
+            : selected === "all"
+              ? "아직 뉴스가 없어요. '뉴스 가져오기'를 눌러 보세요."
+              : "이 카테고리에 해당하는 뉴스가 없어요."}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
