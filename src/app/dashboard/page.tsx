@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CategoryBar } from "@/components/category-bar";
 import { FetchNewsButton } from "@/components/fetch-news-button";
 import { NewsCard } from "@/components/news-card";
+import { NewsCountBadge } from "@/components/news-count-badge";
 import { Pagination } from "@/components/pagination";
 import { SearchForm } from "@/components/search-form";
 import { db } from "@/db";
@@ -68,6 +69,8 @@ async function Dashboard({
     .select({ total: count() })
     .from(articles)
     .where(filter);
+  // 배지에는 필터·검색과 무관한 전체 수집 건수를 보여 준다.
+  const [{ allTotal }] = await db.select({ allTotal: count() }).from(articles);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   // 잘못된 값이나 범위를 벗어난 페이지는 가장 가까운 유효 페이지로 맞춘다.
   const requested = Number.parseInt(
@@ -122,6 +125,7 @@ async function Dashboard({
 
   return (
     <>
+      <NewsCountBadge total={allTotal} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <CategoryBar categories={categoryList} selected={selected} query={query} />
         <SearchForm query={query} category={selected} />
