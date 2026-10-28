@@ -1,11 +1,19 @@
 import type { Article } from "@/db/schema";
+import { SaveNewsButton } from "./save-news-button";
 
 type NewsCardProps = {
   article: Pick<
     Article,
-    "originalTitle" | "titleKo" | "summaryKo" | "source" | "url" | "publishedAt"
+    | "id"
+    | "originalTitle"
+    | "titleKo"
+    | "summaryKo"
+    | "source"
+    | "url"
+    | "publishedAt"
   >;
   categoryName: string | null;
+  saved: boolean;
 };
 
 const dateFormat = new Intl.DateTimeFormat("ko-KR", {
@@ -15,7 +23,7 @@ const dateFormat = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "Asia/Seoul",
 });
 
-export function NewsCard({ article, categoryName }: NewsCardProps) {
+export function NewsCard({ article, categoryName, saved }: NewsCardProps) {
   // 번역이 아직 없으면 원문 제목으로 대체한다.
   const title = article.titleKo ?? article.originalTitle;
 
@@ -49,7 +57,7 @@ export function NewsCard({ article, categoryName }: NewsCardProps) {
           {article.summaryKo}
         </p>
       )}
-      <div className="mt-auto pt-2">
+      <div className="mt-auto flex items-center justify-between pt-2">
         <a
           href={article.url}
           target="_blank"
@@ -58,6 +66,7 @@ export function NewsCard({ article, categoryName }: NewsCardProps) {
         >
           원문 보기 ↗
         </a>
+        <SaveNewsButton articleId={article.id} initialSaved={saved} />
       </div>
     </article>
   );
