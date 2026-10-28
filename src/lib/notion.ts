@@ -50,3 +50,34 @@ export async function saveArticleToNotion(
   const page = (await res.json()) as { url: string };
   return page.url;
 }
+
+/** 저장된 Notion 페이지 URL에서 페이지 ID(32자리 hex)를 꺼낸다. */
+function pageIdFromUrl(pageUrl: string): string | null {
+  const match = pageUrl.match(/([0-9a-f]{32})(?:[?#]|$)/i);
+  return match ? match[1] : null;
+}
+
+/** Notion 페이지를 휴지통으로 보낸다. 이미 없는 페이지(404)는 성공으로 본다. */
+export async function archiveNotionPage(pageUrl: string): Promise<void> {
+  const token = process.env.NOTION_API_TOKEN;
+  if (!token) {
+    throw new Error("NOTION_API_TOKEN이 설정되지 않았어요.");
+  }
+  const pageId = pageIdFromUrl(pageUrl);
+  if (!pageId) {
+    throw new Error(`Notion 페이지 ID를 찾을 수 없어요: ${pageUrl}`);
+  }
+
+  const res = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Notion-Version": NOTION_VERSION,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ archived: true }),
+  });
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`Notion API ${res.status}: ${await res.text()}`);
+  }
+}

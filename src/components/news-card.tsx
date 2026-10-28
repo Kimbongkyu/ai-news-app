@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { Article } from "@/db/schema";
+import { DeleteNewsButton } from "./delete-news-button";
 import { SaveNewsButton } from "./save-news-button";
 
 type NewsCardProps = {
@@ -30,7 +31,8 @@ export function NewsCard({ article, categoryName, saved }: NewsCardProps) {
   const title = article.titleKo ?? article.originalTitle;
 
   return (
-    <article className="flex h-full flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <article className="relative flex h-full flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+      <DeleteNewsButton articleId={article.id} saved={saved} />
       {article.imageUrl && (
         <div className="relative -mx-5 -mt-5 aspect-video overflow-hidden rounded-t-xl bg-zinc-100 dark:bg-zinc-800">
           <Image
