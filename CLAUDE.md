@@ -4,7 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 현재 상태
 
-`create-next-app` 스캐폴드만 있다 (Next.js 16.4.2, React 19.3, TypeScript, Tailwind 4, App Router, `src/` 디렉터리, alias `@/*` → `src/*`). 앱 코드, DB, 테스트는 아직 없다. 무엇을 만들지는 [PRD.md](PRD.md)(한국어)가 기준이다: 데이터 모델, 화면, API 라우트, 환경변수, 미결정 사항(§13). 구현 전에 반드시 읽을 것.
+Next.js 16.4.2, React 19.3, TypeScript, Tailwind 4, App Router, `src/` 디렉터리, alias `@/*` → `src/*`. 무엇을 만들지는 [PRD.md](PRD.md)(한국어)가 기준이다: 데이터 모델, 화면, API 라우트, 환경변수, 미결정 사항(§13). 구현 전에 반드시 읽을 것.
+
+**구현됨**
+- Clerk 로그인(모달)과 `users` 행 생성, `/api/*` 보호(`src/proxy.ts`)
+- RSS 수집(TechCrunch, The Verge, 썸네일 포함), OpenAI 번역·요약·카테고리 분류, 10분 재실행 간격
+- 카드 대시보드 `/dashboard`: 카테고리 필터, 키워드 검색, 페이지네이션, '뉴스 가져오기'
+- Notion 저장 버튼과 `notion_saves` 중복 저장 방지 — 단, PRD의 MCP/OAuth 방식이 아니라 Notion API 직접 호출이다(아래 'Notion 저장' 참고)
+- Neon + Drizzle 스키마(`src/db/schema.ts`), 기본 카테고리·예제 기사 시드(`src/db/seed.ts`)
+
+**아직 없음**
+- 카테고리 관리 화면 `/categories`와 `/api/categories`(추가·수정·삭제, admin 전용), '재분류' 버튼
+- `/api/articles`, `/api/notion/oauth/*`
+- 사용자별 Notion OAuth 연결(MCP 클라이언트)
+- 홈 `/`는 아직 `create-next-app` 기본 화면이다(메인 화면은 `/dashboard`)
+- 테스트
 
 ## UI 가이드
 
@@ -22,15 +36,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 [AGENTS.md](AGENTS.md)는 이 Next.js 버전에 기존 학습 지식과 다른 breaking change가 있다고 경고한다. Next.js 코드를 쓰기 전에 `node_modules/next/dist/docs/`의 관련 가이드를 읽고, deprecation 안내를 따를 것.
 
-## 계획된 아키텍처 (PRD 기준)
+## 아키텍처 (PRD 기준, 구현 현황은 '현재 상태' 참고)
 
 - 다중 사용자 앱 (인증은 Clerk `@clerk/nextjs`에 위임, 역할 `admin`/`user`는 앱 DB `users.role`). 로그인·가입은 별도 경로 없이 Clerk 모달로 처리하며, 루트 레이아웃의 `<Show>`가 비로그인 사용자에게 로그인 모달을 띄우고 페이지를 숨긴다. `/api/*`는 `src/proxy.ts`(Next.js 16의 middleware 후속, Clerk 미들웨어)에서 `auth.protect()`로 보호. 로그인 사용자의 최초 요청 시 `users`에 Clerk user ID로 행을 만들고 이때 역할 결정: 최초 사용자 또는 `ADMIN_EMAIL`로 지정한 이메일이면 admin. 비밀번호·세션 쿠키는 직접 다루지 않는다.
 - 뉴스 파이프라인: `POST /api/news/fetch`가 RSS 두 개(TechCrunch AI, The Verge AI)를 읽고, DB에 없는 URL만 저장한 뒤 OpenAI(구조화 JSON)로 한국어 제목, 3~5문장 요약, 카테고리(현재 카테고리 목록 중에서만 선택)를 생성한다(모델 `gpt-5-mini`, 환경변수 `OPENAI_MODEL`로 변경 가능. 1회 최대 30건, 5건씩 배치·동시 3개, 초과분은 다음 수집에서 처리). 전역 10분 재실행 간격(`fetch_state.last_fetched_at`) 안에서는 OpenAI를 전혀 호출하지 않는다. 기사와 카테고리는 모든 사용자가 공유한다.
 - 카테고리 추가·수정·삭제는 admin만 가능(`/categories`). 기본 시드(확정): 모델/출시, 연구, 비즈니스/투자, 규제/정책, 기타. 사용자는 전체 / 각 카테고리 / 미분류로 필터링한다.
 - 카테고리를 삭제하면 해당 기사의 `category_id`가 null('미분류')이 된다. '재분류' 버튼은 OpenAI로 현재 목록 기준 재분류한다.
-- Notion 저장: 앱 서버가 공식 원격 Notion MCP 서버의 MCP 클라이언트로 동작한다 (사용자별 OAuth, 암호화된 토큰은 `notion_connections`에 저장). 사용자가 지정한 상위 페이지 하위에 페이지를 만들고, `notion_saves`로 중복 저장을 막는다.
+- Notion 저장 (PRD 목표): 앱 서버가 공식 원격 Notion MCP 서버의 MCP 클라이언트로 동작한다 (사용자별 OAuth, 암호화된 토큰은 `notion_connections`에 저장). 사용자가 지정한 상위 페이지 하위에 페이지를 만들고, `notion_saves`로 중복 저장을 막는다.
+  - **현재 구현**: `src/lib/notion.ts`가 Notion API(`api.notion.com`)를 환경변수 `NOTION_API_TOKEN`·`NOTION_DATABASE_ID`로 직접 호출해 하나의 데이터베이스에 페이지를 만든다(사용자별 연결 없음). `notion_saves` 중복 방지는 동작한다. MCP/OAuth 전환 여부는 미정이므로, Notion 저장을 손대기 전에 사용자에게 확인할 것.
 - 스택: Clerk(인증), Neon Postgres + Drizzle ORM, OpenAI API, Vercel 배포 (신규 기사가 많을 때 함수 실행 시간 제한 주의).
-- 환경변수: `DATABASE_URL`, `OPENAI_API_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`(`pk_`), `CLERK_SECRET_KEY`(`sk_`, 공개 키와 혼동 주의), `ADMIN_EMAIL`, 토큰 암호화 키.
+- 환경변수: `DATABASE_URL`, `OPENAI_API_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`(`pk_`), `CLERK_SECRET_KEY`(`sk_`, 공개 키와 혼동 주의), `ADMIN_EMAIL`, 토큰 암호화 키, `OPENAI_MODEL`(선택), `NOTION_API_TOKEN`·`NOTION_DATABASE_ID`(현재 Notion 저장 구현용).
 
 ### 데이터 모델
 
@@ -41,10 +56,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `notion_connections`: user_id, 암호화된 OAuth 토큰, 저장 대상 page_id
 - `notion_saves`: user_id, article_id, notion_page_url
 
-### 화면 / API (예정)
+### 화면 / API
 
-- 화면: 로그인/가입은 모달, `/`(카드 목록 + 카테고리 필터 + '뉴스 가져오기'), `/categories`(admin).
-- API: `/api/news/fetch`, `/api/articles`, `/api/categories`, `/api/articles/[id]/notion`, `/api/notion/oauth/*`.
+- 화면: 로그인/가입은 모달, `/dashboard`(카드 목록 + 카테고리 필터 + 검색 + '뉴스 가져오기', 구현됨; PRD의 `/`에 해당), `/categories`(admin, 미구현).
+- API: 구현됨 `/api/news/fetch`, `/api/articles/[id]/notion`. 미구현(예정) `/api/articles`, `/api/categories`, `/api/notion/oauth/*`.
 - RSS: TechCrunch `https://techcrunch.com/category/artificial-intelligence/feed/`, The Verge `https://www.theverge.com/rss/ai-artificial-intelligence/index.xml`.
 
 ### 리스크 / 구현 시 유의
