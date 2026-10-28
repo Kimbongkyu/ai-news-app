@@ -65,6 +65,15 @@
   - 카테고리 추가·수정·삭제는 **admin 전용**([PRD.md](PRD.md) §5.4)이므로 admin에게만 렌더링한다. 일반 사용자에게는 바 끝에 아무것도 표시하지 않는다.
   - 클릭 동작(인라인 입력, 모달, `/categories`로 이동 중 무엇인지)은 구현 시 결정한다. 이 가이드는 위치와 모양만 정한다.
 
+## 4.1 검색창
+
+**카테고리 바와 같은 줄의 오른쪽 끝**에 둔다. 둘을 `flex flex-wrap items-center justify-between gap-3` 컨테이너로 묶어, 카테고리 바는 왼쪽, 검색창은 오른쪽에 놓는다. 폼은 `flex items-center gap-2`. 모바일(`sm` 미만)에서는 검색창이 카테고리 바 아래 줄로 내려가 폭을 꽉 채운다(`w-full sm:w-auto`).
+
+- 입력: 모바일은 폼 폭을 꽉 채우고(`flex-1`), `sm` 이상에서는 고정 폭 `sm:w-56 sm:flex-none`. `min-w-0 flex-1 sm:w-56 sm:flex-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm placeholder:text-zinc-400 dark:border-zinc-700 dark:bg-zinc-900`, placeholder "키워드로 뉴스 검색".
+- '검색' 버튼은 §6의 주요 버튼. Enter 키로도 제출된다(일반 GET 폼, `?q=`).
+- 검색어가 있을 때만 보조 버튼 '초기화'를 오른쪽에 표시한다.
+- 결과가 없으면 "'키워드'에 해당하는 뉴스가 없어요."를 §7의 빈 목록 스타일로 보여 준다.
+
 ## 5. 뉴스 카드
 
 그리드: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3`
