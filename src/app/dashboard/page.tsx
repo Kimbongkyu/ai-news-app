@@ -5,7 +5,8 @@ import { FetchNewsButton } from "@/components/fetch-news-button";
 import { NewsCard } from "@/components/news-card";
 import { Pagination } from "@/components/pagination";
 import { db } from "@/db";
-import { articles, categories } from "@/db/schema";
+import { articles, categories, notionSaves } from "@/db/schema";
+import { ensureUser } from "@/lib/users";
 
 export const instant = false;
 
@@ -94,6 +95,15 @@ async function Dashboard({
     .limit(PAGE_SIZE)
     .offset((page - 1) * PAGE_SIZE);
 
+  const userId = await ensureUser();
+  const savedRows = userId
+    ? await db
+        .select({ articleId: notionSaves.articleId })
+        .from(notionSaves)
+        .where(eq(notionSaves.userId, userId))
+    : [];
+  const savedIds = new Set(savedRows.map((r) => r.articleId));
+
   return (
     <>
       <CategoryBar categories={categoryList} selected={selected} />
@@ -110,6 +120,7 @@ async function Dashboard({
               key={row.id}
               article={row}
               categoryName={row.categoryName}
+              saved={savedIds.has(row.id)}
             />
           ))}
         </div>
