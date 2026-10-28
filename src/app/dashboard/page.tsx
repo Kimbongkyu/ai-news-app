@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { CategoryBar } from "@/components/category-bar";
 import { FetchNewsButton } from "@/components/fetch-news-button";
 import { NewsCard } from "@/components/news-card";
+import { NewsGridSkeleton } from "@/components/news-card-skeleton";
 import { NewsCountBadge } from "@/components/news-count-badge";
 import { Pagination } from "@/components/pagination";
 import { SearchForm } from "@/components/search-form";
@@ -21,7 +22,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
         <h1 className="text-xl font-semibold tracking-tight">AI 뉴스 수집기</h1>
         <FetchNewsButton />
       </div>
-      <Suspense fallback={<DashboardSkeleton />}>
+      <Suspense fallback={<NewsGridSkeleton />}>
         <Dashboard searchParams={searchParams} />
       </Suspense>
     </main>
@@ -152,18 +153,5 @@ async function Dashboard({
       )}
       <Pagination page={page} totalPages={totalPages} hrefFor={hrefFor} />
     </>
-  );
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }, (_, i) => (
-        <div
-          key={i}
-          className="h-48 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800"
-        />
-      ))}
-    </div>
   );
 }
