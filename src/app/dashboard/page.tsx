@@ -82,6 +82,7 @@ async function Dashboard({
       source: articles.source,
       url: articles.url,
       publishedAt: articles.publishedAt,
+      imageUrl: articles.imageUrl,
       categoryName: categories.name,
     })
     .from(articles)

@@ -30,16 +30,18 @@
 ### 5.2 뉴스 가져오기
 - '뉴스 가져오기' 버튼 클릭 시 두 RSS 피드의 최신 글을 모두 읽는다.
 - URL 기준으로 DB에 없는 신규 기사만 OpenAI API로 처리한다(한국어 제목 번역, 3~5문장 요약, 카테고리 선택).
+- OpenAI 모델은 `gpt-5-mini`(환경변수 `OPENAI_MODEL`로 변경 가능). 1회 처리 상한은 30건(호출당 5건씩 배치, 동시 3개)이며, 초과분은 다음 수집에서 최신순으로 이어서 처리한다.
 - 최소 재실행 간격 10분: 마지막 수집 후 10분 이내에는 OpenAI를 호출하지 않고 기존 데이터만 표시하며, 안내 메시지를 보여준다.
 - 뉴스와 카테고리는 모든 사용자가 공유한다.
 
 ### 5.3 뉴스 카드
-- 한국어 제목 + 3~5문장 요약, 카테고리 배지.
+- 썸네일(있을 때만), 카테고리 배지, 한국어 제목 + 3~5문장 요약.
+- 출처·발행일, 원문 링크.
 - 'Notion 저장' 버튼.
-- (선택, 추후 결정) 원문 링크·출처·발행일 표시.
+- 썸네일은 원본 사이트 이미지를 참조한다. RSS에 이미지가 없으면 기사 페이지의 og:image를 가져오고, 그래도 없으면 이미지 없이 표시한다.
 
 ### 5.4 카테고리
-- 기본 카테고리 시드: 모델/출시, 연구, 비즈니스/투자, 규제/정책, 기타 (초안, 변경 가능).
+- 기본 카테고리 시드(확정): 모델/출시, 연구, 비즈니스/투자, 규제/정책, 기타. 이후 admin이 변경할 수 있다.
 - OpenAI 모델은 현재 카테고리 목록 중에서만 선택해 분류한다.
 - 사용자는 카테고리를 선택해 해당 뉴스만 필터링해 볼 수 있다(전체 / 각 카테고리 / 미분류).
 - 카테고리 추가·수정·삭제는 admin만 가능.
@@ -62,7 +64,7 @@
 ## 7. 데이터 모델
 - `users`: id(Clerk user ID, text PK), email, role, created_at
 - `categories`: id, name(unique), created_at
-- `articles`: id, source, url(unique), original_title, title_ko, summary_ko, published_at, category_id(nullable = 미분류), created_at
+- `articles`: id, source, url(unique), original_title, title_ko, summary_ko, published_at, image_url(nullable), category_id(nullable = 미분류), created_at
 - `fetch_state`: last_fetched_at
 - `notion_connections`: user_id, 암호화된 OAuth 토큰, 저장 대상 page_id
 - `notion_saves`: user_id, article_id, notion_page_url
@@ -76,7 +78,7 @@
 `/api/news/fetch`, `/api/articles`, `/api/categories`, `/api/articles/[id]/notion`, `/api/notion/oauth/*`
 
 ## 10. 환경변수
-`DATABASE_URL`, `OPENAI_API_KEY`, `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`(`pk_`), `CLERK_SECRET_KEY`(`sk_`), `ADMIN_EMAIL`, 토큰 암호화 키
+`DATABASE_URL`, `OPENAI_API_KEY`, `OPENAI_MODEL`(선택, 기본 `gpt-5-mini`), `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`(`pk_`), `CLERK_SECRET_KEY`(`sk_`), `ADMIN_EMAIL`, 토큰 암호화 키
 
 ## 11. 리스크 및 대응
 - **OpenAI 비용 노출**(공개 가입 + 누구나 수집): 10분 재실행 간격으로 1차 대응. 필요 시 배치·건수 제한 추가.
@@ -90,6 +92,4 @@
 - Notion 연결 후 저장 시 지정 페이지 하위에 페이지 생성
 
 ## 13. 미결정 사항
-- 카드에 원문 링크·출처·발행일·썸네일을 포함할지
-- 사용할 OpenAI 모델과 1회 처리 건수 상한
-- 기본 카테고리 최종 목록
+현재 없음.

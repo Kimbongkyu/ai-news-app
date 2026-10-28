@@ -6,9 +6,33 @@ export type FeedItem = {
   publishedAt: Date | null;
   // 태그를 제거한 본문 발췌. 없으면 빈 문자열.
   excerpt: string;
+  // 피드에 이미지가 없으면 null.
+  imageUrl: string | null;
 };
 
 const EXCERPT_MAX = 1500;
+
+// 본문 HTML의 첫 <img> 주소. 피드 본문은 &#038; 같은 엔티티가 그대로 들어 있다.
+function firstImage(html: string): string | null {
+  const m = html.match(/<img\b[^>]*?\ssrc=["']([^"']+)["']/i);
+  if (!m) return null;
+  const src = m[1].replace(/&#0?38;|&amp;/g, "&").trim();
+  return /^https?:\/\//i.test(src) ? src : null;
+}
+
+// RSS 2.0의 media:content / media:thumbnail / enclosure(image)에서 이미지를 찾는다.
+function mediaImage(item: XmlNode): string | null {
+  for (const key of ["media:content", "media:thumbnail", "enclosure"]) {
+    const raw = item[key];
+    const nodes = (Array.isArray(raw) ? raw : [raw]) as (XmlNode | undefined)[];
+    for (const n of nodes) {
+      const url = n && typeof n === "object" ? text(n["@_url"]) : "";
+      const type = n && typeof n === "object" ? text(n["@_type"]) : "";
+      if (url && (!type || type.startsWith("image/"))) return url;
+    }
+  }
+  return null;
+}
 
 function toExcerpt(html: string): string {
   return html
@@ -87,6 +111,9 @@ export function parseFeed(xml: string): FeedItem[] {
       url: normalizeUrl(url),
       publishedAt: toDate(item.pubDate),
       excerpt: toExcerpt(text(item["content:encoded"]) || text(item.description)),
+      imageUrl:
+        mediaImage(item) ??
+        firstImage(text(item["content:encoded"]) || text(item.description)),
     });
   }
 
@@ -102,6 +129,7 @@ export function parseFeed(xml: string): FeedItem[] {
       url: normalizeUrl(url),
       publishedAt: toDate(entry.published ?? entry.updated),
       excerpt: toExcerpt(text(entry.content) || text(entry.summary)),
+      imageUrl: firstImage(text(entry.content) || text(entry.summary)),
     });
   }
 

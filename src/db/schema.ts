@@ -41,6 +41,8 @@ export const articles = pgTable(
     titleKo: text("title_ko"),
     summaryKo: text("summary_ko"),
     publishedAt: timestamp("published_at", { withTimezone: true }),
+    // 카드 썸네일. 원본 사이트 이미지를 그대로 참조하며, 없으면 null.
+    imageUrl: text("image_url"),
     // null = 미분류. 카테고리 삭제 시 자동으로 null이 된다.
     categoryId: integer("category_id").references(() => categories.id, {
       onDelete: "set null",

@@ -75,6 +75,7 @@
 
 구성 (위에서 아래):
 
+0. **썸네일** (있을 때만): 아래 "썸네일" 참고.
 1. **카테고리 배지**: `w-fit rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300`. 미분류는 `bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400`로 '미분류'라고 표시.
 2. **한국어 제목**: 카드 제목 스타일, 최대 3줄 `line-clamp-3`.
 3. **메타 줄**: `text-xs text-zinc-500 dark:text-zinc-400`, `출처 · 2026년 10월 27일` 형식. 발행일이 없으면 출처만 표시. 날짜는 `Asia/Seoul` 기준.
@@ -87,7 +88,7 @@
 - 저장 중: 비활성(`disabled:opacity-50`) + 라벨 "저장 중…"
 - 저장 완료: 버튼 대신 `text-sm text-emerald-600` 으로 "저장됨" 표시 (중복 저장 방지)
 
-**결정됨 (PRD §13)**: 카드에 출처·발행일·원문 링크를 넣는다. 썸네일은 아직 미결정이므로 넣지 않는다.
+**썸네일(결정됨)**: 이미지가 있는 카드는 컨테이너 맨 위에 카드 가장자리까지 채워 넣는다: `relative -mx-5 -mt-5 aspect-video overflow-hidden rounded-t-xl bg-zinc-100 dark:bg-zinc-800` + `next/image`(`fill`, `object-cover`, `alt=""`). 이미지가 없으면 영역 자체를 두지 않는다. 허용 호스트는 `next.config.ts`의 `images.remotePatterns`에 등록한다.
 
 ## 6. 버튼
 
