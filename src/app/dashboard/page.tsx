@@ -19,7 +19,7 @@ export default function DashboardPage({ searchParams }: PageProps<"/dashboard">)
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 py-6 sm:px-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">AI 뉴스 수집기</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">AI 뉴스 수집기</h1>
         <FetchNewsButton />
       </div>
       <Suspense fallback={<NewsGridSkeleton />}>
@@ -132,7 +132,7 @@ async function Dashboard({
         <SearchForm query={query} category={selected} />
       </div>
       {rows.length === 0 ? (
-        <p className="py-16 text-center text-sm text-zinc-500">
+        <p className="py-16 text-center text-sm text-zinc-500 dark:text-zinc-400">
           {query
             ? `'${query}'에 해당하는 뉴스가 없어요.`
             : selected === "all"

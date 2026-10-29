@@ -25,7 +25,7 @@ export function SignInGate() {
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-4 p-8 text-center">
       <h1 className="text-2xl font-semibold">AI 뉴스 수집기</h1>
-      <p className="text-zinc-500">서비스를 이용하려면 로그인이 필요합니다.</p>
+      <p className="text-zinc-500 dark:text-zinc-400">서비스를 이용하려면 로그인이 필요합니다.</p>
       <SignInButton mode="modal">
         <button className="rounded-full bg-black px-5 py-2 text-white dark:bg-white dark:text-black">
           로그인
