@@ -93,6 +93,11 @@ src/
 └── proxy.ts                     # Clerk 미들웨어 (/api/* 보호)
 ```
 
+## 사용할 플러그인
+
+- Frontend Design: UI 디자인 품질 향상
+- commit-commands: 깃 워크플로 자동화
+
 ## 문서
 
 - [PRD.md](PRD.md) — 요구사항, 데이터 모델, 화면, API
