@@ -18,8 +18,8 @@
 | 페이지 배경 | `bg-background` | `bg-background` |
 | 카드 배경 | `bg-white` | `dark:bg-zinc-900` |
 | 카드 테두리 | `border-zinc-200` | `dark:border-zinc-800` |
-| 본문 텍스트 | `text-zinc-700` | `dark:text-zinc-300` |
-| 제목 텍스트 | `text-zinc-900` | `dark:text-zinc-100` |
+| 본문 텍스트 | `text-zinc-600` | `dark:text-zinc-300` |
+| 제목 텍스트 | `text-zinc-900` | `dark:text-zinc-50` |
 | 보조 텍스트 | `text-zinc-500` | `dark:text-zinc-400` |
 | 강조(선택·주요 버튼) | `bg-indigo-600 text-white` | `dark:bg-indigo-500` |
 
@@ -27,8 +27,8 @@
 
 - 폰트는 Geist(`font-sans`). 현재 `body`에 `font-family: Arial`이 지정돼 있어 `--font-sans`가 적용되지 않는다. 대시보드 작업 시 `body`의 `font-family`를 `var(--font-sans)`로 바꾸거나 `font-sans` 클래스를 쓸 것.
 - 앱 제목: `text-xl font-semibold tracking-tight`
-- 카드 제목: `text-base font-semibold leading-snug`
-- 요약: `text-sm leading-relaxed` (한국어 가독성을 위해 줄 간격을 넉넉히)
+- 카드 제목: `text-lg font-semibold leading-snug tracking-tight`
+- 요약: `text-sm leading-7` (한국어 가독성을 위해 줄 간격을 넉넉히)
 - 메타 정보·배지: `text-xs`
 
 ## 3. 페이지 레이아웃 (`/`)
@@ -78,18 +78,20 @@
 
 그리드: `grid gap-4 sm:grid-cols-2 lg:grid-cols-3`
 
-카드 컨테이너:
+카드 컨테이너 (`group`으로 hover 효과를 자식에 전달):
 
-`flex h-full flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900`
+`group relative flex h-full flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-6 transition duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-lg motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700 dark:hover:shadow-black/40`
 
 구성 (위에서 아래):
 
 0. **썸네일** (있을 때만): 아래 "썸네일" 참고.
-1. **카테고리 배지**: `w-fit rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300`. 미분류는 `bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400`로 '미분류'라고 표시.
-2. **한국어 제목**: 카드 제목 스타일, 최대 3줄 `line-clamp-3`.
-3. **메타 줄**: `text-xs text-zinc-500 dark:text-zinc-400`, `출처 · 2026년 10월 27일` 형식. 발행일이 없으면 출처만 표시. 날짜는 `Asia/Seoul` 기준.
-4. **요약 (3~5문장)**: 요약 스타일. 잘라 내지 않고 전체를 보여 준다.
-5. **하단 액션 영역** (`mt-auto flex items-center justify-between pt-2`): 왼쪽에 `원문 보기 ↗` 링크(`text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400`, 새 탭 `target="_blank" rel="noopener noreferrer"`), 오른쪽에 'Notion 저장' 버튼.
+1. **메타 줄**: `flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400`. 왼쪽부터 카테고리 배지 · 출처(`font-medium text-zinc-600 dark:text-zinc-300`) · 날짜(`2026년 10월 27일` 형식, `Asia/Seoul` 기준). 발행일이 없으면 날짜와 구분점(`·`)을 생략한다.
+   - 카테고리 배지: `rounded-md bg-indigo-50 px-2 py-0.5 font-medium text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300`. 미분류는 `bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400`로 '미분류'라고 표시.
+2. **한국어 제목**: 카드 제목 스타일, 최대 3줄 `line-clamp-3`. 카드 hover 시 `group-hover:text-indigo-700 dark:group-hover:text-indigo-300`.
+3. **요약 (3~5문장)**: 요약 스타일(`text-zinc-600 dark:text-zinc-300`). 잘라 내지 않고 전체를 보여 준다.
+4. **하단 액션 영역** (`mt-auto flex items-center justify-between border-t border-zinc-100 pt-4 dark:border-zinc-800`): 왼쪽에 `원문 보기 ↗` 링크(`text-sm font-medium text-indigo-600 hover:underline dark:text-indigo-400`, 새 탭 `target="_blank" rel="noopener noreferrer"`). ↗는 `aria-hidden` span으로 분리해 링크 hover 시 `translate-x-0.5 -translate-y-0.5`로 움직인다. 오른쪽에는 'Notion 저장' 버튼.
+
+**hover 인터랙션**: 카드가 살짝 뜨고(`-translate-y-0.5`) 그림자·테두리가 진해진다. 모든 모션에는 `motion-reduce:` 대응을 둔다. 삭제(✕) 버튼은 hover 가능한 기기에서만 숨겨 두었다가 카드 hover·포커스 시 나타나고(`[@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100`), 터치 기기에서는 항상 보인다.
 
 **Notion 저장 버튼 상태**:
 
@@ -97,7 +99,7 @@
 - 저장 중: 비활성(`disabled:opacity-50`) + 라벨 "저장 중…"
 - 저장 완료: 버튼 대신 `text-sm text-emerald-600` 으로 "저장됨" 표시 (중복 저장 방지)
 
-**썸네일(결정됨)**: 이미지가 있는 카드는 컨테이너 맨 위에 카드 가장자리까지 채워 넣는다: `relative -mx-5 -mt-5 aspect-video overflow-hidden rounded-t-xl bg-zinc-100 dark:bg-zinc-800` + `next/image`(`fill`, `object-cover`, `alt=""`). 이미지가 없으면 영역 자체를 두지 않는다. 허용 호스트는 `next.config.ts`의 `images.remotePatterns`에 등록한다.
+**썸네일(결정됨)**: 이미지가 있는 카드는 컨테이너 맨 위에 카드 가장자리까지 채워 넣는다: `relative -mx-6 -mt-6 aspect-video overflow-hidden rounded-t-2xl bg-zinc-100 dark:bg-zinc-800` + `next/image`(`fill`, `object-cover`, `alt=""`). hover 시 이미지는 `transition-transform duration-500 group-hover:scale-105`로 천천히 확대된다. 이미지가 없으면 영역 자체를 두지 않는다. 허용 호스트는 `next.config.ts`의 `images.remotePatterns`에 등록한다.
 
 ## 6. 버튼
 
@@ -111,7 +113,7 @@
 
 ## 7. 상태 화면
 
-- **로딩(가져오는 중)**: '뉴스 가져오기' 버튼을 비활성 + "가져오는 중…". 카드 영역은 같은 크기의 스켈레톤(`animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800 h-48`)을 쓴다.
+- **로딩(가져오는 중)**: '뉴스 가져오기' 버튼을 비활성 + "가져오는 중…". 카드 영역은 같은 크기의 스켈레톤(`animate-pulse rounded-2xl bg-zinc-100 dark:bg-zinc-800 h-48`)을 쓴다.
 - **빈 목록**: 가운데 정렬 안내 문구 `py-16 text-center text-sm text-zinc-500` — "아직 뉴스가 없어요. '뉴스 가져오기'를 눌러 보세요." 필터 결과가 비었을 땐 "이 카테고리에 해당하는 뉴스가 없어요."
 - **10분 재실행 제한 안내**: 카테고리 바 위에 얇은 안내 줄 `rounded-lg bg-zinc-100 px-4 py-2 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300`. 에러는 같은 형태에 `bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300`.
 

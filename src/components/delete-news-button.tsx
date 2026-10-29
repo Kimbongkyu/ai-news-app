@@ -38,7 +38,7 @@ export function DeleteNewsButton({
   }
 
   return (
-    <div className="absolute right-3 top-3 z-10 flex items-center gap-2">
+    <div className="absolute right-3 top-3 z-10 flex items-center gap-2 transition-opacity [@media(hover:hover)]:opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
       {error && (
         <span
           role="alert"
