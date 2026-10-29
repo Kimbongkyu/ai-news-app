@@ -1,7 +1,7 @@
 export function NewsCardSkeleton() {
   return (
-    <div className="flex h-full animate-pulse flex-col gap-3 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="-mx-5 -mt-5 aspect-video rounded-t-xl bg-zinc-100 dark:bg-zinc-800" />
+    <div className="flex h-full animate-pulse flex-col gap-4 rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="-mx-6 -mt-6 aspect-video rounded-t-2xl bg-zinc-100 dark:bg-zinc-800" />
       <div className="h-5 w-16 rounded-md bg-zinc-100 dark:bg-zinc-800" />
       <div className="h-5 w-11/12 rounded bg-zinc-100 dark:bg-zinc-800" />
       <div className="h-3 w-1/3 rounded bg-zinc-100 dark:bg-zinc-800" />
