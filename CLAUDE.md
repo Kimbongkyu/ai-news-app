@@ -11,6 +11,7 @@ Next.js 16.4.2, React 19.3, TypeScript, Tailwind 4, App Router, `src/` 디렉터
 - RSS 수집(TechCrunch, The Verge, 썸네일 포함), OpenAI 번역·요약·카테고리 분류, 10분 재실행 간격
 - 카드 대시보드 `/dashboard`: 카테고리 필터, 키워드 검색, 페이지네이션, '뉴스 가져오기'
 - Notion 저장 버튼과 `notion_saves` 중복 저장 방지 — 단, PRD의 MCP/OAuth 방식이 아니라 Notion API 직접 호출이다(아래 'Notion 저장' 참고)
+- 다크 모드: 헤더 오른쪽 위 토글, `<html class="dark">` 기반(`localStorage` 저장, 기본값은 OS 설정)
 - Neon + Drizzle 스키마(`src/db/schema.ts`), 기본 카테고리·예제 기사 시드(`src/db/seed.ts`)
 
 **아직 없음**

@@ -70,7 +70,7 @@ export function Pagination({ page, totalPages, hrefFor }: PaginationProps) {
           <span
             key={`gap-${i}`}
             aria-hidden
-            className="px-1 py-1.5 text-sm text-zinc-400"
+            className="px-1 py-1.5 text-sm text-zinc-400 dark:text-zinc-500"
           >
             …
           </span>
